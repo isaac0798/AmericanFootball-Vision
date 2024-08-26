@@ -1,35 +1,56 @@
 #include <opencv2/opencv.hpp>
 #include <iostream>
 
-int main() {
-    // Read an image from file
-    cv::Mat image = cv::imread("input_image.jpg");
-
-    // Check if the image was successfully loaded
-    if (image.empty()) {
-        std::cout << "Error: Could not open or find the image" << std::endl;
+int main(int argc, char* argv[]) {
+    // Check if video path is provided
+    if (argc != 2) {
+        std::cout << "Usage: " << argv[0] << " <VideoPath>" << std::endl;
         return -1;
     }
 
-    // Display the original image
-    cv::imshow("Original Image", image);
+    // Open the video file
+    cv::VideoCapture cap(argv[1]);
 
-    // Convert the image to grayscale
-    cv::Mat gray_image;
-    cv::cvtColor(image, gray_image, cv::COLOR_BGR2GRAY);
+    // Check if video opened successfully
+    if (!cap.isOpened()) {
+        std::cout << "Error opening video file" << std::endl;
+        return -1;
+    }
 
-    // Display the grayscale image
-    cv::imshow("Grayscale Image", gray_image);
+    // Get video properties
+    int frame_width = static_cast<int>(cap.get(cv::CAP_PROP_FRAME_WIDTH));
+    int frame_height = static_cast<int>(cap.get(cv::CAP_PROP_FRAME_HEIGHT));
+    double fps = cap.get(cv::CAP_PROP_FPS);
 
-    // Apply Gaussian blur
-    cv::Mat blurred_image;
-    cv::GaussianBlur(gray_image, blurred_image, cv::Size(5, 5), 0);
+    std::cout << "Video properties:" << std::endl;
+    std::cout << "Width: " << frame_width << std::endl;
+    std::cout << "Height: " << frame_height << std::endl;
+    std::cout << "FPS: " << fps << std::endl;
 
-    // Display the blurred image
-    cv::imshow("Blurred Image", blurred_image);
+    cv::namedWindow("Frame", cv::WINDOW_NORMAL);
 
-    // Wait for a key press
-    cv::waitKey(0);
+    while (true) {
+        cv::Mat frame;
+        // Read a new frame from video
+        bool success = cap.read(frame);
+        
+        // Break the loop if no more frames
+        if (!success)
+            break;
+
+        // Display the frame
+        cv::imshow("Frame", frame);
+
+        // Press 'q' to exit
+        if (cv::waitKey(30) == 'q')
+            break;
+    }
+
+    // Release the video capture object
+    cap.release();
+
+    // Close all windows
+    cv::destroyAllWindows();
 
     return 0;
 }
